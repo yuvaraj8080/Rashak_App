@@ -18,6 +18,10 @@ class LiveLocationController extends GetxController {
   /// SHAKE MODE IS DISABLE
   RxBool isShakeModeEnabled = false.obs;
 
+
+  // Track the last cluster the user was in
+  String? lastClusterId;
+
   //// STORE ALL THE INCIDENTS REPORTS DATA ////
   var reports = <ReportIncidentModel>[].obs;
   //// STORE ALL THE MARKES DATA IN THE VARIABLE ////
@@ -37,6 +41,36 @@ class LiveLocationController extends GetxController {
     getCurrentLocation();
     fetchReports();
     _startListeningShakeDetector();
+    // Periodically check the user's location
+    Timer.periodic(Duration(seconds: 5), (timer) {
+      // TLoaders.successSnackBar(title:"data");
+      updateUserLocation(); // Check the user's location every 5 seconds
+    });
+  }
+
+  // Method to check if the user is in a cluster
+  void checkUserInCluster(LatLng userLocation) {
+    for (var cluster in polygons) {
+      if (_isPointInCluster(userLocation, cluster.points, 100)) {
+        // If the user is in a new cluster, show the message
+        if (lastClusterId != cluster.polygonId.value) {
+          lastClusterId = cluster.polygonId.value; // Update the last cluster ID
+          TLoaders.warningSnackBar(title:"Danger zone",message:"You are in the Danger Area, Please Be Careful"); // Show the message
+        }
+        return; // Exit after finding the first cluster
+      }
+    }
+    lastClusterId = null; // Reset if not in any cluster
+  }
+
+
+  // Call this method whenever the user's location is updated
+  Future<void> updateUserLocation() async {
+    LocationData? locationData = await getCurrentLocationLatLong();
+    if (locationData != null) {
+      LatLng userLocation = LatLng(locationData.latitude!, locationData.longitude!);
+      checkUserInCluster(userLocation); // Check if the user is in a cluster
+    }
   }
 
   Future<void> fetchReports() async {
@@ -166,10 +200,13 @@ class LiveLocationController extends GetxController {
     controller?.animateCamera(
       CameraUpdate.newLatLngZoom(initialLatLng.value, 14.0),
     );
+
+    // Check if the user is in a cluster
+    await updateUserLocation();
     return _locationData;
   }
 
-  Future<LocationData?> _getCurrentLocation() async {
+  Future<LocationData?> getCurrentLocationLatLong() async {
     Location location = Location();
     LocationData? locationData;
     bool _serviceEnabled = await location.serviceEnabled();
@@ -188,7 +225,7 @@ class LiveLocationController extends GetxController {
       if (isShakeModeEnabled.value && _isShaking(event)) {
         shakeCount++;
         if (shakeCount == 3) {
-          LocationData? locationData = await _getCurrentLocation();
+          LocationData? locationData = await getCurrentLocationLatLong();
           if (locationData != null) {
             await _sosController.sendShakeSOS(locationData);
             if (await Vibration.hasVibrator() ?? false) {

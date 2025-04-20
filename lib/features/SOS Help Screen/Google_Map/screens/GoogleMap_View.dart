@@ -35,7 +35,7 @@ class GoogleMap_View_Screen extends StatelessWidget {
         floatingActionButtonLocation: FloatingActionButtonLocation.centerFloat,
         floatingActionButton: FloatingActionButton.extended(
             onPressed: () async {
-              LocationData? locationData = await locationController.getCurrentLocation();
+              LocationData? locationData = await locationController.getCurrentLocationLatLong();
               if (locationData != null) {
                 await sosController.sendSOS(locationData); // Trigger SOS send/stop
               } else {

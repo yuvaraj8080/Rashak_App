@@ -1,5 +1,5 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android">
-    package="com.SheShield.app">
+    package="com.SheShieldSafety.app">
     <uses-feature android:name="android.hardware.telephony" android:required="false"/>
     <uses-permission android:name="android.permission.FOREGROUND_SERVICE" />
     <uses-permission android:name="android.permission.SEND_SMS" />

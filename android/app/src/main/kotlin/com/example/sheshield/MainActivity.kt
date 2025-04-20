@@ -1,4 +1,4 @@
-package com.SheShield.app;
+package com.SheShieldSafety.app;
 
 import android.content.Intent
 import android.net.Uri

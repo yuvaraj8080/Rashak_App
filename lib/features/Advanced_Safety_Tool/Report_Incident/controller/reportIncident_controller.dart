@@ -2,6 +2,7 @@ import 'dart:io';
 
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
+import 'package:geolocator/geolocator.dart';
 import 'package:get/get.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:location/location.dart';
@@ -157,7 +158,7 @@ class ReportIncidentController extends GetxController {
   /// SAVE REPORT INCIDENT
   Future<void> createReportIncident() async {
     try {
-      LocationData? locationData = await locationController.getCurrentLocationLatLong();
+      Position? locationData = await locationController.getCurrentLocation();
 
       /// START LOADING
       TFullScreenLoader.openLoadingDialog("Wait For Incident Reporting", TImages.loadingLottie);

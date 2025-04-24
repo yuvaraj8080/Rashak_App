@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
-import 'package:location/location.dart';
-import '../../../../common/widgets.Login_Signup/loaders/snackbar_loader.dart';
+import 'package:geolocator/geolocator.dart';
+import 'package:sheshield/common/widgets.Login_Signup/loaders/snackbar_loader.dart';
 import '../controller/LiveLocationController.dart';
 import '../controller/SOS_Help_Controller.dart';
 
@@ -30,7 +30,6 @@ class GoogleMap_View_Screen extends StatelessWidget {
         },
       ),
 
-      // Floating Action Button for SOS
       floatingActionButtonLocation: FloatingActionButtonLocation.centerFloat,
       floatingActionButton: GestureDetector(
         onLongPress: () async {
@@ -50,12 +49,11 @@ class GoogleMap_View_Screen extends StatelessWidget {
           ),
           backgroundColor: sosController.isSOSActive.value ? Colors.red : Colors.blue,
           onPressed: () async {
-            print("Printing");
-
-            LocationData? locationData = await locationController.getCurrentLocationLatLong();
-            print("Printing the Location:${locationData.toString()}");
-            if (locationData != null) {
-              await sosController.sendSOS(locationData); // Send SOS on tap
+            print("printing");
+            Position? position = await locationController.getCurrentLocation();
+            print("Printing: ${position.toString()}");
+            if (position != null) {
+              await sosController.sendSOS(position); // Send SOS on tap
             } else {
               TLoaders.warningSnackBar(title: 'Failed to get current location');
             }

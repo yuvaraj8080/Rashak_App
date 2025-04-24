@@ -15,24 +15,16 @@ import 'SOS_Help_Controller.dart';
 class LiveLocationController extends GetxController {
   static LiveLocationController get instance => Get.find();
 
-  /// SHAKE MODE IS DISABLE
   RxBool isShakeModeEnabled = false.obs;
-
-
-  // Track the last cluster the user was in
   String? lastClusterId;
-
-  //// STORE ALL THE INCIDENTS REPORTS DATA ////
   var reports = <ReportIncidentModel>[].obs;
-  //// STORE ALL THE MARKES DATA IN THE VARIABLE ////
   var markers = <Marker>[].obs;
   var polygons = <Polygon>[].obs;
-
   Rx<LatLng> initialLatLng = LatLng(19.1213, 72.8237).obs;
   Rx<GoogleMapController?> googleMapController = Rx<GoogleMapController?>(null);
   final SOSController _sosController = Get.put(SOSController());
-  // Timer? _timer;
   int shakeCount = 0;
+
 
   @override
   void onInit() {
@@ -41,7 +33,6 @@ class LiveLocationController extends GetxController {
     getCurrentLocation();
     fetchReports();
     _startListeningShakeDetector();
-    // Periodically check the user's location
     Timer.periodic(Duration(seconds: 5), (timer) {
       updateUserLocation(); // Check the user's location every 5 seconds
     });
@@ -51,24 +42,24 @@ class LiveLocationController extends GetxController {
   void checkUserInCluster(LatLng userLocation) {
     for (var cluster in polygons) {
       if (_isPointInCluster(userLocation, cluster.points, 100)) {
-        // If the user is in a new cluster, show the message
         if (lastClusterId != cluster.polygonId.value) {
-          lastClusterId = cluster.polygonId.value; // Update the last cluster ID
-          TLoaders.warningSnackBar(title:"Alert:Danger zone",message:"You are in the Danger Area, Please Be Careful"); // Show the message
+          lastClusterId = cluster.polygonId.value;
+          TLoaders.warningSnackBar(title: "Alert: Danger zone", message: "You are in the Danger Area, Please Be Careful");
         }
-        return; // Exit after finding the first cluster
+        return;
       }
     }
-    lastClusterId = null; // Reset if not in any cluster
+    lastClusterId = null;
   }
+
 
 
   // Call this method whenever the user's location is updated
   Future<void> updateUserLocation() async {
-    LocationData? locationData = await getCurrentLocationLatLong();
-    if (locationData != null) {
-      LatLng userLocation = LatLng(locationData.latitude!, locationData.longitude!);
-      checkUserInCluster(userLocation); // Check if the user is in a cluster
+    Position? position = await getCurrentLocation();
+    if (position != null) {
+      LatLng userLocation = LatLng(position.latitude, position.longitude);
+      checkUserInCluster(userLocation);
     }
   }
 
@@ -184,49 +175,36 @@ class LiveLocationController extends GetxController {
   }
 
 
-  Future<LocationData?> getCurrentLocation() async {
-    bool locationPermissionGranted = await _handleLocationPermission();
-    if (!locationPermissionGranted) {
+  Future<Position?> getCurrentLocation() async {
+    bool serviceEnabled = await Geolocator.isLocationServiceEnabled();
+    if (!serviceEnabled) {
+      TLoaders.warningSnackBar(title: 'Location services are disabled.');
       return null;
     }
 
-    Location location = Location();
-    LocationData? _locationData;
-
-    _locationData = await location.getLocation();
-    initialLatLng.value = LatLng(_locationData.latitude!, _locationData.longitude!);
-    final GoogleMapController? controller = googleMapController.value;
-    controller?.animateCamera(
-      CameraUpdate.newLatLngZoom(initialLatLng.value, 14.0),
-    );
-
-    // Check if the user is in a cluster
-    await updateUserLocation();
-    return _locationData;
-  }
-
-  Future<LocationData?> getCurrentLocationLatLong() async {
-    Location location = Location();
-    LocationData? locationData;
-    bool _serviceEnabled = await location.serviceEnabled();
-    if (_serviceEnabled) {
-      locationData = await location.getLocation();
+    LocationPermission permission = await Geolocator.checkPermission();
+    if (permission == LocationPermission.denied) {
+      permission = await Geolocator.requestPermission();
+      if (permission != LocationPermission.whileInUse && permission != LocationPermission.always) {
+        TLoaders.warningSnackBar(title: 'Location permissions are denied.');
+        return null;
+      }
     }
 
-    return locationData;
+    return await Geolocator.getCurrentPosition(
+      // desiredAccuracy: LocationAccuracy.high,
+    );
   }
-
 
   /// SHAKE FEATURE IS HARE [SEND SOS HELP]
   void _startListeningShakeDetector() {
-    int shakeCount = 0;
     accelerometerEvents.listen((event) async {
       if (isShakeModeEnabled.value && _isShaking(event)) {
         shakeCount++;
         if (shakeCount == 3) {
-          LocationData? locationData = await getCurrentLocationLatLong();
-          if (locationData != null) {
-            await _sosController.sendShakeSOS(locationData);
+          Position? position = await getCurrentLocation();
+          if (position != null) {
+            await _sosController.sendShakeSOS(position);
             if (await Vibration.hasVibrator() ?? false) {
               Vibration.vibrate(duration: 100);
             }
@@ -239,8 +217,6 @@ class LiveLocationController extends GetxController {
 
   bool _isShaking(AccelerometerEvent event) {
     final double threshold = 70.0;
-    return event.x.abs() > threshold ||
-        event.y.abs() > threshold ||
-        event.z.abs() > threshold;
+    return event.x.abs() > threshold || event.y.abs() > threshold || event.z.abs() > threshold;
   }
 }

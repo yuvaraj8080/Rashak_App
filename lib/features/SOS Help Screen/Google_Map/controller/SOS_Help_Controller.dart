@@ -1,12 +1,11 @@
 import 'dart:async';
-import 'package:location/location.dart';
+import 'package:geolocator/geolocator.dart'; // Import Geolocator
 import 'package:get/get.dart';
 import 'package:background_sms/background_sms.dart';
 import 'package:permission_handler/permission_handler.dart';
-
+import 'package:sheshield/common/widgets.Login_Signup/loaders/snackbar_loader.dart';
 import '../../../../Constants/contactsm.dart';
 import '../../../../DB/db_services.dart';
-import '../../../../common/widgets.Login_Signup/loaders/snackbar_loader.dart';
 
 class SOSController extends GetxController {
   final _contactList = <TContact>[].obs;
@@ -19,7 +18,6 @@ class SOSController extends GetxController {
     _loadContacts();
   }
 
-  /// Reloads contact list whenever contacts are added or changed
   Future<void> refreshContacts() async {
     _contactList.assignAll(await DatabaseHelper().getContactList());
   }
@@ -28,7 +26,8 @@ class SOSController extends GetxController {
     await refreshContacts();
   }
 
-  Future<void> sendSOS(LocationData locationData) async {
+  // Update the method to accept Position instead of LocationData
+  Future<void> sendSOS(Position position) async {
     await refreshContacts();
     if (!isSOSActive.value) {
       if (_contactList.isEmpty) {
@@ -40,8 +39,8 @@ class SOSController extends GetxController {
       if (permissionsGranted) {
         isSOSActive.value = true;
         TLoaders.successSnackBar(title: "SOS Help Activated");
-        await _sendSOSMessage(locationData);
-        _startSOSMessageTimer(locationData);
+        // await _sendSOSMessage(position);
+        _startSOSMessageTimer(position);
       }
     }
   }
@@ -54,15 +53,15 @@ class SOSController extends GetxController {
     }
   }
 
-  void _startSOSMessageTimer(LocationData locationData) {
-    _sendSOSMessage(locationData);
+  void _startSOSMessageTimer(Position position) {
+    _sendSOSMessage(position);
     _timer = Timer.periodic(Duration(seconds: 10), (timer) async {
-      await _sendSOSMessage(locationData);
+      await _sendSOSMessage(position);
     });
   }
 
-  Future<void> _sendSOSMessage(LocationData locationData) async {
-    String message = "I am in trouble! Please reach me at my current live location: https://www.google.com/maps/search/?api=1&query=${locationData.latitude},${locationData.longitude}";
+  Future<void> _sendSOSMessage(Position position) async {
+    String message = "I am in trouble! Please reach me at my current live location: https://www.google.com/maps/search/?api=1&query=${position.latitude},${position.longitude}";
 
     for (TContact contact in _contactList) {
       await sendMessage(contact.number, message);
@@ -70,7 +69,7 @@ class SOSController extends GetxController {
     }
   }
 
-  Future<void> sendShakeSOS(LocationData locationData) async {
+  Future<void> sendShakeSOS(Position position) async {
     await refreshContacts();  // Ensure we have the latest contacts
     if (_contactList.isEmpty) {
       TLoaders.warningSnackBar(title: "No trusted contacts available? Please Add Trusted Contact!");
@@ -79,11 +78,10 @@ class SOSController extends GetxController {
 
     bool permissionsGranted = await _arePermissionsGranted();
     if (permissionsGranted) {
-      String message = "I am in trouble! Please reach me at my current live location: https://www.google.com/maps/search/?api=1&query=${locationData.latitude},${locationData.longitude}";
+      String message = "I am in trouble! Please reach me at my current live location: https://www.google.com/maps/search/?api=1&query=${position.latitude},${position.longitude}";
 
       for (TContact contact in _contactList) {
         await sendMessage(contact.number, message);
-        // Optionally show a notification here
       }
     }
   }

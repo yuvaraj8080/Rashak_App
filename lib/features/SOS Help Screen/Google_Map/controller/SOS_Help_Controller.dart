@@ -29,32 +29,23 @@ class SOSController extends GetxController {
   }
 
   Future<void> sendSOS(LocationData locationData) async {
-    // Check if SOS is already active
-    if (isSOSActive.value) return;
+    await refreshContacts();
+    if (!isSOSActive.value) {
+      if (_contactList.isEmpty) {
+        TLoaders.warningSnackBar(title: "No trusted contacts available? Please Add Trusted Contact!");
+        return;
+      }
 
-    // Check if contacts are available
-    if (_contactList.isEmpty) {
-      TLoaders.warningSnackBar(title: "No trusted contacts available? Please Add Trusted Contact!");
-      return;
+      bool permissionsGranted = await _arePermissionsGranted();
+      if (permissionsGranted) {
+        isSOSActive.value = true;
+        TLoaders.successSnackBar(title: "SOS Help Activated");
+        await _sendSOSMessage(locationData);
+        _startSOSMessageTimer(locationData);
+      }
     }
-
-    // Check permissions
-    bool permissionsGranted = await _arePermissionsGranted();
-    if (!permissionsGranted) {
-      TLoaders.warningSnackBar(title: "Permissions not granted. Please enable SMS and Contacts permissions.");
-      return;
-    }
-
-    // Activate SOS
-    isSOSActive.value = true;
-    TLoaders.successSnackBar(title: "SOS Help Activated");
-
-    // Send SOS message immediately
-    await _sendSOSMessage(locationData);
-
-    // Start the timer for periodic messages
-    _startSOSMessageTimer(locationData);
   }
+
   Future<void> stopSOS() async {
     if (isSOSActive.value) {
       _timer?.cancel();
@@ -64,6 +55,7 @@ class SOSController extends GetxController {
   }
 
   void _startSOSMessageTimer(LocationData locationData) {
+    _sendSOSMessage(locationData);
     _timer = Timer.periodic(Duration(seconds: 10), (timer) async {
       await _sendSOSMessage(locationData);
     });

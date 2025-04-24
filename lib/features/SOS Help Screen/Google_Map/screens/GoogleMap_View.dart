@@ -50,7 +50,10 @@ class GoogleMap_View_Screen extends StatelessWidget {
           ),
           backgroundColor: sosController.isSOSActive.value ? Colors.red : Colors.blue,
           onPressed: () async {
+            print("Printing");
+
             LocationData? locationData = await locationController.getCurrentLocationLatLong();
+            print("Printing the Location:${locationData.toString()}");
             if (locationData != null) {
               await sosController.sendSOS(locationData); // Send SOS on tap
             } else {

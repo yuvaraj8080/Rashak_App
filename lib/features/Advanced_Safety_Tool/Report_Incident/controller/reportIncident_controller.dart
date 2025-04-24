@@ -157,7 +157,7 @@ class ReportIncidentController extends GetxController {
   /// SAVE REPORT INCIDENT
   Future<void> createReportIncident() async {
     try {
-      LocationData? locationData = await locationController.getCurrentLocation();
+      LocationData? locationData = await locationController.getCurrentLocationLatLong();
 
       /// START LOADING
       TFullScreenLoader.openLoadingDialog("Wait For Incident Reporting", TImages.loadingLottie);

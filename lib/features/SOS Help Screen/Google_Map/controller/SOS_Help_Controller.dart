@@ -28,39 +28,45 @@ class SOSController extends GetxController {
     await refreshContacts();
   }
 
-  /// Send SOS help SMS to all trusted contacts
   Future<void> sendSOS(LocationData locationData) async {
-    await refreshContacts();  // Ensure we have the latest contacts
-    if (!isSOSActive.value) {
-      if (_contactList.isEmpty) {
-        TLoaders.warningSnackBar(title: "No trusted contacts available? Please Add Trusted Contact!");
-        return;
-      }
+    // Check if SOS is already active
+    if (isSOSActive.value) return;
 
-      bool permissionsGranted = await _arePermissionsGranted();
-      if (permissionsGranted){
-        isSOSActive.value = true;  // Update observable
-        TLoaders.successSnackBar(title: "SOS Help Activated");
-
-        // Send SOS message immediately
-        await _sendSOSMessage(locationData);
-
-        // Start sending SOS messages every 10 seconds
-        _timer = Timer.periodic(Duration(seconds: 10), (timer) async {
-          await _sendSOSMessage(locationData);
-        });
-      }
-    } else {
-      // Stop sending SOS messages
-      _timer?.cancel();
-      String message = "I am safe now! My current location: https://www.google.com/maps/search/?api=1&query=${locationData.latitude},${locationData.longitude}";
-
-      for (TContact contact in _contactList) {
-        await sendMessage(contact.number, message);
-      }
-      TLoaders.successSnackBar(title: "SOS Help Deactivated");
-      isSOSActive.value = false;  // Update observable
+    // Check if contacts are available
+    if (_contactList.isEmpty) {
+      TLoaders.warningSnackBar(title: "No trusted contacts available? Please Add Trusted Contact!");
+      return;
     }
+
+    // Check permissions
+    bool permissionsGranted = await _arePermissionsGranted();
+    if (!permissionsGranted) {
+      TLoaders.warningSnackBar(title: "Permissions not granted. Please enable SMS and Contacts permissions.");
+      return;
+    }
+
+    // Activate SOS
+    isSOSActive.value = true;
+    TLoaders.successSnackBar(title: "SOS Help Activated");
+
+    // Send SOS message immediately
+    await _sendSOSMessage(locationData);
+
+    // Start the timer for periodic messages
+    _startSOSMessageTimer(locationData);
+  }
+  Future<void> stopSOS() async {
+    if (isSOSActive.value) {
+      _timer?.cancel();
+      isSOSActive.value = false;
+      TLoaders.successSnackBar(title: "SOS Help Deactivated");
+    }
+  }
+
+  void _startSOSMessageTimer(LocationData locationData) {
+    _timer = Timer.periodic(Duration(seconds: 10), (timer) async {
+      await _sendSOSMessage(locationData);
+    });
   }
 
   Future<void> _sendSOSMessage(LocationData locationData) async {

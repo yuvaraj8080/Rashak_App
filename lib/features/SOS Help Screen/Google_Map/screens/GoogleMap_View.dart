@@ -7,57 +7,58 @@ import '../controller/LiveLocationController.dart';
 import '../controller/SOS_Help_Controller.dart';
 
 class GoogleMap_View_Screen extends StatelessWidget {
-  // Use dependency injection for controller via Get
   final LiveLocationController locationController = Get.put(LiveLocationController());
   final SOSController sosController = Get.put(SOSController());
 
   @override
   Widget build(BuildContext context) {
-    return Obx(()=> Scaffold(
-        body: GoogleMap(
-            buildingsEnabled: true,
-            trafficEnabled: true,
-            mapType: MapType.normal,
-            initialCameraPosition: CameraPosition(
-              target: locationController.initialLatLng.value,
-              zoom: 14.0,
-            ),
-            markers: Set<Marker>.of(locationController.markers),
-            polygons: Set<Polygon>.of(locationController.polygons),
-            myLocationButtonEnabled: true,
-            myLocationEnabled: true,
-            onMapCreated: (GoogleMapController controller) {
-              locationController.googleMapController.value = controller;
-            },
-          ),
-
-        // Update the FAB based on SOS status
-        floatingActionButtonLocation: FloatingActionButtonLocation.centerFloat,
-        floatingActionButton: FloatingActionButton.extended(
-            onPressed: () async {
-              LocationData? locationData = await locationController.getCurrentLocationLatLong();
-              if (locationData != null) {
-                await sosController.sendSOS(locationData); // Trigger SOS send/stop
-              } else {
-                TLoaders.warningSnackBar(title: 'Failed to get current location');
-              }
-            },
-            // Show different labels and icons depending on the SOS state
-            label: Text(sosController.isSOSActive.value ? "Stop SOS" : "Start SOS"),
-            icon: sosController.isSOSActive.value
-                ? Icon(Icons.stop, color: Colors.white)
-                : Row(
-              children: [
-                CircleAvatar(
-                  backgroundImage: AssetImage("assets/images/sos.png"),
-                  radius: 25, // Adjusted for better UI
-                ),
-              ],
-            ),
-            backgroundColor: sosController.isSOSActive.value ? Colors.red : Colors.blue,
-          )
+    return Obx(() => Scaffold(
+      body: GoogleMap(
+        buildingsEnabled: true,
+        trafficEnabled: true,
+        mapType: MapType.normal,
+        initialCameraPosition: CameraPosition(
+          target: locationController.initialLatLng.value,
+          zoom: 14.0,
+        ),
+        markers: Set<Marker>.of(locationController.markers),
+        polygons: Set<Polygon>.of(locationController.polygons),
+        myLocationButtonEnabled: true,
+        myLocationEnabled: true,
+        onMapCreated: (GoogleMapController controller) {
+          locationController.googleMapController.value = controller;
+        },
       ),
-    );
+
+      // Floating Action Button for SOS
+      floatingActionButtonLocation: FloatingActionButtonLocation.centerFloat,
+      floatingActionButton: GestureDetector(
+        onLongPress: () async {
+          await sosController.stopSOS(); // Stop SOS on long press
+        },
+        child: FloatingActionButton.extended(
+          label: Text(sosController.isSOSActive.value ? "Stop SOS" : "Start SOS"),
+          icon: sosController.isSOSActive.value
+              ? Icon(Icons.stop, color: Colors.white)
+              : Row(
+            children: [
+              CircleAvatar(
+                backgroundImage: AssetImage("assets/images/sos.png"),
+                radius: 25,
+              ),
+            ],
+          ),
+          backgroundColor: sosController.isSOSActive.value ? Colors.red : Colors.blue,
+          onPressed: () async {
+            LocationData? locationData = await locationController.getCurrentLocationLatLong();
+            if (locationData != null) {
+              await sosController.sendSOS(locationData); // Send SOS on tap
+            } else {
+              TLoaders.warningSnackBar(title: 'Failed to get current location');
+            }
+          },
+        ),
+      ),
+    ));
   }
 }
-

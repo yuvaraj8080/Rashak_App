@@ -28,7 +28,7 @@ class LiveLocationController extends GetxController {
   var markers = <Marker>[].obs;
   var polygons = <Polygon>[].obs;
 
-  Rx<LatLng> initialLatLng = LatLng(28.6472799, 76.8130638).obs;
+  Rx<LatLng> initialLatLng = LatLng(19.1213, 72.8237).obs;
   Rx<GoogleMapController?> googleMapController = Rx<GoogleMapController?>(null);
   final SOSController _sosController = Get.put(SOSController());
   // Timer? _timer;

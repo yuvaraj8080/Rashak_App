@@ -98,17 +98,13 @@ class DatabaseHelper {
     return result;
   }
 
-  // Get the 'Map List' [ List<Map> ] and convert it to 'Contact List' [ List<Contact> ]
+
+// Get the 'Map List' [ List<Map> ] and convert it to 'Contact List' [ List<Contact> ]
   Future<List<TContact>> getContactList() async {
-    var contactMapList = await getContactMapList(); // Get 'Map List' from database
-    int count = contactMapList.length; // Count the number of map entries in db table
+    // Get 'Map List' from database
+    var contactMapList = await getContactMapList();
 
-    List<TContact> contactList = <TContact>[];
-    // For loop to create a 'Contact List' from a 'Map List'
-    for (int i = 0; i < count; i++) {
-      contactList.add(TContact.fromMapObject(contactMapList[i]));
-    }
-
-    return contactList;
+    // Use map to convert each Map to TContact and convert the Iterable to List
+    return contactMapList.map((contactMap) => TContact.fromMapObject(contactMap)).toList();
   }
 }

@@ -43,7 +43,6 @@ class LiveLocationController extends GetxController {
     _startListeningShakeDetector();
     // Periodically check the user's location
     Timer.periodic(Duration(seconds: 5), (timer) {
-      // TLoaders.successSnackBar(title:"data");
       updateUserLocation(); // Check the user's location every 5 seconds
     });
   }
@@ -55,7 +54,7 @@ class LiveLocationController extends GetxController {
         // If the user is in a new cluster, show the message
         if (lastClusterId != cluster.polygonId.value) {
           lastClusterId = cluster.polygonId.value; // Update the last cluster ID
-          TLoaders.warningSnackBar(title:"Danger zone",message:"You are in the Danger Area, Please Be Careful"); // Show the message
+          TLoaders.warningSnackBar(title:"Alert:Danger zone",message:"You are in the Danger Area, Please Be Careful"); // Show the message
         }
         return; // Exit after finding the first cluster
       }

@@ -8,6 +8,7 @@ import 'app.dart';
 import 'data/repositories/authentication/authentication-repository.dart';
 import 'firebase_options.dart';
 
+
 void main() async{
   ///---WIDGET BINDING
   final WidgetsBinding widgetsBinding = WidgetsFlutterBinding.ensureInitialized();

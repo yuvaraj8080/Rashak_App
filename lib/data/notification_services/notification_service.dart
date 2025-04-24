@@ -37,12 +37,12 @@
 //     }
 //   });
 //
-//   // AwesomeNotifications().setListeners(
-//   //   onActionReceivedMethod: onActionReceivedMethod,
-//   //   onNotificationCreatedMethod: onNotificationCreatedMethod,
-//   //   onNotificationDisplayedMethod: onNotificationDisplayedMethod,
-//   //   onDismissActionReceivedMethod: onDismissActionReceivedMethod,
-//   // );
+//   AwesomeNotifications().setListeners(
+//     onActionReceivedMethod: onActionReceivedMethod,
+//     onNotificationCreatedMethod: onNotificationCreatedMethod,
+//     onNotificationDisplayedMethod: onNotificationDisplayedMethod,
+//     onDismissActionReceivedMethod: onDismissActionReceivedMethod,
+//   );
 //
 // }
 //

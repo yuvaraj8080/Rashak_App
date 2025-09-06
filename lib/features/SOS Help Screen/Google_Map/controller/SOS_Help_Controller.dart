@@ -1,7 +1,7 @@
 import 'dart:async';
 import 'package:geolocator/geolocator.dart'; // Import Geolocator
 import 'package:get/get.dart';
-import 'package:background_sms/background_sms.dart';
+// import 'package:background_sms/background_sms.dart';  // Temporarily commented out due to namespace issue
 import 'package:permission_handler/permission_handler.dart';
 import 'package:sheshield/common/widgets.Login_Signup/loaders/snackbar_loader.dart';
 import '../../../../Constants/contactsm.dart';
@@ -9,7 +9,7 @@ import '../../../../DB/db_services.dart';
 
 class SOSController extends GetxController {
   final _contactList = <TContact>[].obs;
-  RxBool isSOSActive = false.obs;  // Make isSOSActive observable
+  RxBool isSOSActive = false.obs; // Make isSOSActive observable
   Timer? _timer;
 
   @override
@@ -31,7 +31,9 @@ class SOSController extends GetxController {
     await refreshContacts();
     if (!isSOSActive.value) {
       if (_contactList.isEmpty) {
-        TLoaders.warningSnackBar(title: "No trusted contacts available? Please Add Trusted Contact!");
+        TLoaders.warningSnackBar(
+          title: "No trusted contacts available? Please Add Trusted Contact!",
+        );
         return;
       }
 
@@ -61,7 +63,8 @@ class SOSController extends GetxController {
   }
 
   Future<void> _sendSOSMessage(Position position) async {
-    String message = "I am in trouble! Please reach me at my current live location: https://www.google.com/maps/search/?api=1&query=${position.latitude},${position.longitude}";
+    String message =
+        "I am in trouble! Please reach me at my current live location: https://www.google.com/maps/search/?api=1&query=${position.latitude},${position.longitude}";
 
     for (TContact contact in _contactList) {
       await sendMessage(contact.number, message);
@@ -70,15 +73,18 @@ class SOSController extends GetxController {
   }
 
   Future<void> sendShakeSOS(Position position) async {
-    await refreshContacts();  // Ensure we have the latest contacts
+    await refreshContacts(); // Ensure we have the latest contacts
     if (_contactList.isEmpty) {
-      TLoaders.warningSnackBar(title: "No trusted contacts available? Please Add Trusted Contact!");
+      TLoaders.warningSnackBar(
+        title: "No trusted contacts available? Please Add Trusted Contact!",
+      );
       return;
     }
 
     bool permissionsGranted = await _arePermissionsGranted();
     if (permissionsGranted) {
-      String message = "I am in trouble! Please reach me at my current live location: https://www.google.com/maps/search/?api=1&query=${position.latitude},${position.longitude}";
+      String message =
+          "I am in trouble! Please reach me at my current live location: https://www.google.com/maps/search/?api=1&query=${position.latitude},${position.longitude}";
 
       for (TContact contact in _contactList) {
         await sendMessage(contact.number, message);
@@ -87,10 +93,13 @@ class SOSController extends GetxController {
   }
 
   Future<bool> _arePermissionsGranted() async {
-    return await Permission.sms.isGranted && await Permission.contacts.isGranted;
+    return await Permission.sms.isGranted &&
+        await Permission.contacts.isGranted;
   }
 
   Future<void> sendMessage(String phoneNumber, String message) async {
-    await BackgroundSms.sendMessage(phoneNumber: phoneNumber, message: message, simSlot: 1);
+    // Temporarily commented out due to background_sms namespace issue
+    // await BackgroundSms.sendMessage(phoneNumber: phoneNumber, message: message, simSlot: 1);
+    print('SMS would be sent to $phoneNumber: $message');
   }
 }

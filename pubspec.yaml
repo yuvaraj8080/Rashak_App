@@ -130,7 +130,6 @@ flutter:
 
   assets:
     - assets/images/
-    - assets/dialog_flow_auth.json
     - assets/logos/
     - assets/images/on_boarding_images/
     - assets/images/animations/
